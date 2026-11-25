@@ -56,6 +56,19 @@ jobs:
       # -race needs cgo; the CGO_ENABLED=0 property is proven by the build job.
       - name: go test
         run: CGO_ENABLED=1 go test -race -count=1 ./...
+      # Keep the same required test check; the floor run must not use the newer
+      # compiler suggested by go.mod's toolchain directive (GOTOOLCHAIN=local).
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.26.11"
+      - name: Check dependencies with the Go language floor
+        run: |
+          go version
+          go mod download
+      - name: Run offline suite with the Go language floor
+        env:
+          GOPROXY: "off"
+        run: go test -mod=readonly -count=1 ./...
 
   fuzz-smoke:
     runs-on: ubuntu-latest

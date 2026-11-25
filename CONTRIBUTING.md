@@ -22,7 +22,7 @@ GOPROXY=https://proxy.golang.org,direct make test
 
 | Target | What it runs | CI job |
 | --- | --- | --- |
-| `make test` | `go test ./...` | `test` (with `-race`) |
+| `make test` | `go test ./...` | `test` (build compiler with `-race`, then Go 1.26.11 with `GOTOOLCHAIN=local` to check the language floor) |
 | `make lint` | `golangci-lint run ./...` (govet, staticcheck, errcheck, gosec, revive) | `lint` |
 | `make rules-check` | Validates `rules/sep-*.json` against `rules/schema.json` | `lint` |
 | `make tidy-check` | Fails if `go.mod`/`go.sum` are not tidy | `lint` |
