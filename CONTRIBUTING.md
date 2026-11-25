@@ -102,6 +102,37 @@ A bump is its own commit, with a test run.
 | soroban-sdk, soroban-token-sdk (fixtures only) | 28.0.0 | `testdata/contracts/Cargo.toml` |
 | stellar-cli (fixtures only) | 28.0.0 | `scripts/build-fixtures.sh` |
 
+### Dependency updates
+
+Dependency refreshes arrive as pull requests from Dependabot
+(`.github/dependabot.yml`), weekly, and are reviewed like any other change. The
+grouping exists because a patch bump and a minor bump carry different risk:
+
+| Pull request | Contents | What it needs |
+| --- | --- | --- |
+| `deps: Bump the go-patch group` | every patch update at once | the required checks and one approval |
+| `deps: Bump the go-minor group` / `go-major` | minor or major updates, never mixed with patches | the required checks, one approval, and a test run that covers the changed behaviour |
+| `deps: Bump github.com/stellar/go-stellar-sdk` | the SDK alone, always ungrouped | the required checks, one approval, and a re-check of the XDR surface named in `CLAUDE.md` §3 |
+| `ci: Bump the actions-patch group` | GitHub Actions patch updates | the required checks and one approval |
+
+Required checks are the four contexts enforced on `main` by
+`scripts/repo-settings.sh` — `lint`, `test`, `fuzz-smoke`, `build` — so a
+dependency pull request cannot merge on a stale build. Rule-source review
+applies when a bump touches `rules/`: see "Rule-file pull requests" above.
+
+Two properties make those gates safe to rely on, and both are checked rather
+than assumed. On 25 November 2026, all 31 `uses:` entries across the six
+workflows in `.github/workflows/` resolve to a 40-character commit SHA, and every
+one of those workflows declares `permissions: contents: read`. If a future change
+adds an action by tag, or widens a workflow's permissions, that is the change to
+reject in review — the pin is what keeps a third-party action bump reviewable.
+
+Rust fixture toolchains (`testdata/contracts`) and the documentation pins
+(`docs/requirements.txt`) are not automated. The committed `.wasm` fixtures must
+stay reproducible against the exact `soroban-sdk` that built them, so that bump is
+a coordinated rebuild through `scripts/build-fixtures.sh`, recorded in the table
+above like every other pin.
+
 ## Wave backlog and operator tools
 
 `scripts/wave-issues.json` is the reviewed remaining-work list: every Wave issue with

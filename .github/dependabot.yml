@@ -1,0 +1,91 @@
+# Dependency patch proposals.
+#
+# Dependency refreshes were manual, so a security patch could sit behind the
+# build pin for weeks. This opens proposals automatically, using the same
+# validation gates as any other pull request: the required checks in ci.yml,
+# one maintainer approval, and rule-source review when a bump touches rules/.
+#
+# Grouping follows the rule in CONTRIBUTING.md ("Versions"): a patch bump is its
+# own commit with a test run, and a minor or major bump is never mixed into the
+# same diff as a patch bump. So:
+#
+#   go-patch            every patch update in one PR, reviewable in a minute
+#   go-minor            minor updates, separately
+#   go-major            major updates, separately
+#   go-stellar-sdk      never grouped: the SDK is pinned exactly and its XDR
+#                       surface is re-checked before any bump (CLAUDE.md §3)
+#
+# Commit prefixes follow the scope list in CONTRIBUTING.md ("Commits"): `repo`
+# for the module graph, `infra` for workflow actions. The labels are the ones
+# this repository already defines, so Dependabot does not silently drop them.
+#
+# Rust fixture toolchains (testdata/contracts) and the docs pins
+# (docs/requirements.txt) are deliberately not configured here. The committed
+# .wasm fixtures have to stay reproducible against the exact soroban-sdk used to
+# build them, so that bump is a coordinated rebuild (scripts/build-fixtures.sh),
+# not an automatic proposal.
+
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(repo)"
+    labels:
+      - area:security
+    groups:
+      go-patch:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - github.com/stellar/go-stellar-sdk
+        update-types:
+          - patch
+      go-minor:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - github.com/stellar/go-stellar-sdk
+        update-types:
+          - minor
+      go-major:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - github.com/stellar/go-stellar-sdk
+        update-types:
+          - major
+      go-stellar-sdk:
+        patterns:
+          - github.com/stellar/go-stellar-sdk
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci(infra)"
+    labels:
+      - area/infra
+    groups:
+      actions-patch:
+        patterns:
+          - "*"
+        update-types:
+          - patch
+      actions-minor-and-major:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - major
